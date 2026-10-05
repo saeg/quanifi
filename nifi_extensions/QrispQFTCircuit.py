@@ -70,9 +70,8 @@ class QrispQFTCircuit(FlowFileTransform):
         return self.descriptors
 
     def transform(self, context, flowFile):
-        from qrisp import QuantumVariable, QFT, x
+        from qrisp import QuantumVariable, QFT
         from qiskit import qasm2 as qiskit_qasm2
-        from qiskit.converters import dag_to_circuit, circuit_to_dag
         from qiskit.compiler import transpile
 
         get = lambda prop: (
@@ -93,21 +92,13 @@ class QrispQFTCircuit(FlowFileTransform):
         inverse  = get(self.inverse).lower() == "true"
         do_swaps = get(self.do_swaps).lower() == "true"
 
-        # Apply X on qubit 0 before QFT so Qrisp generates the full gate_QFT/gate_QFT_dg
-        # definition in the compiled output. Without a non-|0> input, Qrisp optimises
-        # QFT on |0...0> to H⊗n, which is mathematically correct but lacks the CP gates
-        # needed for non-zero inputs.  The X gate is stripped after compilation.
+        # Preserve the full operator instead of specializing QFT on |0...0>.
+        # A seed X cannot be stripped reliably after compilation: for one
+        # qubit the compiler absorbs it into a u3 gate, changing the operator.
         qv = QuantumVariable(n)
-        x(qv[0])
         QFT(qv, inv=inverse, exec_swap=do_swaps)
 
-        qk = qv.qs.compile().to_qiskit()
-
-        dag = circuit_to_dag(qk)
-        for node in list(dag.topological_op_nodes()):
-            if node.op.name == 'x':
-                dag.remove_op_node(node)
-        qk_clean = dag_to_circuit(dag)
+        qk_clean = qv.qs.compile(cancel_qfts=False).to_qiskit()
 
         content = qiskit_qasm2.dumps(qk_clean).encode("utf-8")
 
