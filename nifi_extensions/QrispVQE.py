@@ -156,7 +156,7 @@ class QrispVQE(FlowFileTransform):
             init_function = create_hartree_fock_init_function(m, nelec)
             return ansatz_function, num_params, 1, atype, init_function
         else:
-            from QrispAnsatz import _build_ansatz_function
+            from qrisp_ansatz import _build_ansatz_function
             reps = int(flowFile.getAttribute("ansatz.reps") or "2")
             entanglement = flowFile.getAttribute("ansatz.entanglement") or "full"
             ansatz_function, per_layer = _build_ansatz_function(atype, n, entanglement)
