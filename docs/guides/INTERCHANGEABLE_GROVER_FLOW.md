@@ -125,28 +125,33 @@ Again expect the `110` peak with `sim.top_result = 110`, now with
 
 ---
 
-## Qrisp builder and the 3×3 matrix
+## Qrisp builder
 
-`QrispGroverCircuit` (0.1.0) is Qrisp's row of this builder matrix: the same
-`Marked State` / `Num Iterations` / `Output Format` properties as the other
-three builders, qasm2 output only. It is built from Qrisp's `tag_state` phase
-oracle and `grovers_alg` diffuser rather than a hand-written oracle circuit.
+`QrispGroverCircuit` (0.1.0) is Qrisp's counterpart to the all-in-one
+`QiskitGroverCircuit` and `CirqGroverCircuit` builders: the same
+`Marked State` / `Num Iterations` / `Output Format` properties, qasm2 output
+only. It is built from Qrisp's `tag_state` phase oracle and `grovers_alg`
+diffuser rather than a hand-written oracle circuit.
 
 The one thing to know before touching it: **Qrisp's `tag_state` reads a
 binary string little-endian** — its rightmost character is qubit 0 — while
-every builder in this matrix types `Marked State` q0-left (qubit 0 is the
+every other Grover builder types `Marked State` q0-left (qubit 0 is the
 leftmost character), so the processor tags the *reversed* string internally.
 Without that reversal, all three simulators would return the bit-reversed
 state for whatever target you typed. This is purely internal to the
 processor; `Marked State` behaves identically to the Qiskit, Cirq and
 PennyLane builders from the outside.
 
-This builder is the Qrisp row of the Docker quickstart's baked canvas — three
-builders (Qiskit, Cirq, Qrisp) times three simulators (Aer, Cirq, Qrisp) with
-a K=9 `QuantumConsensusOracle` vote and a `QuanifiReport` at the end. See
-[`docs/guides/DOCKER_QUICKSTART.md`](DOCKER_QUICKSTART.md) to run it with only
-Docker Desktop and `git` installed, or `tools/build_grover_examples.py --run`
-to run the same matrix headlessly against a local `.venv`.
+## Flow A in the Docker quickstart
+
+The Docker quickstart's default canvas (`demo/grover/qiskit-grover.json`, see
+[`docs/guides/DOCKER_QUICKSTART.md`](DOCKER_QUICKSTART.md)) is Flow A at its
+smallest: Marked State `10`, Num Iterations `1`, and Output Format `qasm2` on
+both the oracle and the operator. Flows B and C start from that canvas by
+swapping boxes; set any swapped-in Cirq box's Output Format to `qasm2`.
+`QiskitPhaseOracle`, `QiskitGroverOperator`, `CirqPhaseOracle`,
+`CirqGroverOperator`, `QrispGroverCircuit` and the Aer, Cirq and Qrisp
+simulators all ship in the default image.
 
 ## Differential testing in one canvas
 

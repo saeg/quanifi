@@ -24,7 +24,7 @@ services:
       - "127.0.0.1:${QUANIFI_NIFI_PORT:-8443}:8443"
     environment:
       SINGLE_USER_CREDENTIALS_USERNAME: ${QUANIFI_NIFI_USERNAME:-admin}
-      SINGLE_USER_CREDENTIALS_PASSWORD: ${QUANIFI_NIFI_PASSWORD:-quanifi-demo-password}
+      SINGLE_USER_CREDENTIALS_PASSWORD: ${QUANIFI_NIFI_PASSWORD:-quanifipassword}
       # The image seeds conf/flow.json.gz itself (see entrypoint.sh), so NiFi
       # never takes its normal first-boot path that auto-generates this key
       # together with an empty flow; it instead finds an existing flow with a
@@ -95,7 +95,7 @@ services:
       DJANGO_SECURE_COOKIES: "false"
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-local-only-development-key}
       QUANIFI_ADMIN_EMAIL: ${QUANIFI_ADMIN_EMAIL:-admin@example.com}
-      QUANIFI_ADMIN_PASSWORD: ${QUANIFI_ADMIN_PASSWORD:-quanifi-demo-password}
+      QUANIFI_ADMIN_PASSWORD: ${QUANIFI_ADMIN_PASSWORD:-quanifipassword}
       REPORT_INGESTION_TOKEN: ${REPORT_INGESTION_TOKEN:-local-ingestion-token}
     healthcheck:
       test: ["CMD", "python", "-c", "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/health/', timeout=3).status == 200 else 1)"]

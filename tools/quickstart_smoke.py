@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Run the four-processor Qiskit Grover demo after NiFi reports healthy.
+"""Run the five-processor Qiskit Grover demo after NiFi reports healthy.
 
 Checks that the canvas is stopped, runs it, validates the newly written HTML
 report, and stops the group again. The default target is 10 (two qubits).
-The matrix evaluate_result helper is retained for advanced-example tests.
 """
 from __future__ import annotations
 
@@ -25,89 +24,6 @@ import nifi_ready  # noqa: E402
 import build_grover_examples as grover  # noqa: E402
 
 ROOT = _TOOLS_DIR.parent
-
-
-def evaluate_result(doc, expected=None):
-    """Return a list of error strings; an empty list means the demo passed.
-
-    ``doc`` is the verdict document: the RESULT_ATTRIBUTES dict, with
-    ``consensus.branches_json`` either already parsed (a list) or still a
-    JSON string. This checks the tops *strictly per branch* even though the
-    oracle's own verdict is endian-agnostic (a bit-reversed run would still
-    vote PASS).
-    """
-    if expected is None:
-        expected = grover.MARKED_STATE
-    errors = []
-
-    if doc.get("assert.verdict") != "PASS":
-        errors.append(
-            "assert.verdict={!r}, expected PASS".format(doc.get("assert.verdict"))
-        )
-
-    try:
-        branches_count = int(str(doc.get("consensus.branches", "")))
-    except (TypeError, ValueError):
-        branches_count = None
-    if branches_count != 9:
-        errors.append(
-            "consensus.branches={!r}, expected 9".format(doc.get("consensus.branches"))
-        )
-
-    raw_branches = doc.get("consensus.branches_json", "")
-    if isinstance(raw_branches, str):
-        try:
-            branches = json.loads(raw_branches) if raw_branches else []
-        except ValueError:
-            branches = None
-            errors.append("consensus.branches_json is not valid JSON")
-    else:
-        branches = raw_branches
-
-    if branches is not None:
-        if len(branches) != 9:
-            errors.append(
-                "consensus.branches_json has {} entries, expected 9".format(
-                    len(branches)
-                )
-            )
-        expected_labels = {
-            "{} and {}".format(comp, engine)
-            for _, comp in grover.BUILDERS
-            for engine in grover.ENGINES
-        }
-        actual_labels = {b.get("label") for b in branches}
-        if actual_labels != expected_labels:
-            errors.append(
-                "branch labels {} != expected {}".format(actual_labels, expected_labels)
-            )
-        for branch in branches:
-            if branch.get("top") != expected:
-                errors.append(
-                    "branch {!r} top={!r}, expected {!r}".format(
-                        branch.get("label"), branch.get("top"), expected
-                    )
-                )
-            if branch.get("dissent"):
-                errors.append("branch {!r} dissented".format(branch.get("label")))
-
-    try:
-        max_hellinger = float(str(doc.get("consensus.max_hellinger", "")))
-    except (TypeError, ValueError):
-        max_hellinger = None
-        errors.append(
-            "consensus.max_hellinger={!r} is not a float".format(
-                doc.get("consensus.max_hellinger")
-            )
-        )
-    if max_hellinger is not None and max_hellinger > grover.MAX_HELLINGER:
-        errors.append(
-            "consensus.max_hellinger={} > {}".format(
-                max_hellinger, grover.MAX_HELLINGER
-            )
-        )
-
-    return errors
 
 
 def put_json(path, token, body):
@@ -156,7 +72,7 @@ def main(argv=None):
     )
     parser.add_argument(
         "--password",
-        default=os.environ.get("QUANIFI_NIFI_PASSWORD", "quanifi-demo-password"),
+        default=os.environ.get("QUANIFI_NIFI_PASSWORD", "quanifipassword"),
     )
     parser.add_argument("--reports-dir", default=str(ROOT / "reports"))
     parser.add_argument("--timeout", type=int, default=600)

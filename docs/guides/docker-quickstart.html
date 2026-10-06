@@ -143,14 +143,16 @@
       <article>
         <h1 id="docker-quick-start">Docker quick start</h1>
 <p>A fresh clone plus <code>docker compose up</code> builds and starts a lean NiFi 2.9.0
-image with eight quantum processors pre-installed, a stopped demo canvas
+image with twelve quantum processors pre-installed, a stopped demo canvas
 already loaded, and no network calls to the NiFi API during startup. Starting
-the canvas runs one Qiskit Grover circuit on a local Aer simulator and writes
-an HTML report to your host. The default canvas has four processors in a
-single sequence; no comparison matrix or consensus configuration is needed.</p>
-<p>The image measurements below were collected with the previous advanced 3×3
-example (still available separately), not the simple demo. They were collected
-on an Apple Silicon Mac using Docker Desktop. They are reference measurements, not performance guarantees.</p>
+the canvas builds one Grover search from a Qiskit phase oracle and a Qiskit
+Grover operator, runs it on a local Aer simulator, and writes an HTML report to
+your host. The default canvas has five processors in a single sequence; no
+comparison matrix or consensus configuration is needed.</p>
+<p>The image measurements below were collected with an earlier, larger Grover demo
+(nine simulated circuits) and an eight-processor image, not the current demo.
+They were collected on an Apple Silicon Mac using Docker Desktop. They are
+reference measurements, not performance guarantees.</p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
 <li>Docker Desktop with Compose v2, and <code>git</code>. No Python, no NiFi, no quantum
@@ -188,19 +190,22 @@ build took <strong>~1 minute</strong> on a fast connection, and a fresh containe
 log in with:</p>
 <ul>
 <li><strong>Username</strong>: <code>admin</code></li>
-<li><strong>Password</strong>: <code>quanifi-demo-password</code></li>
+<li><strong>Password</strong>: <code>quanifipassword</code></li>
 </ul>
 <h2 id="run-the-demo">Run the demo</h2>
 <ol>
 <li>On the canvas, right-click <strong>Quanifi quickstart — Qiskit Grover</strong> and choose
    <strong>Start</strong>. Double-click the group to see this single flow:</li>
 </ol>
-<p><strong>Start here → Build Grover circuit → Simulate circuit → View results</strong></p>
+<p><strong>Start here → Phase oracle → Grover operator → Simulate circuit → View results</strong></p>
 <ol>
 <li>Each step has one purpose:</li>
 <li><strong>Start here</strong> sends an empty input to start the flow.</li>
-<li><strong>Build Grover circuit</strong> uses Qiskit to search for <code>10</code> among <code>00</code>, <code>01</code>,
-     <code>10</code>, and <code>11</code>, using two qubits and one Grover iteration.</li>
+<li><strong>Phase oracle</strong> (<code>QiskitPhaseOracle</code>) marks the target <code>10</code> with a −1 phase
+     on two qubits, setting it apart from <code>00</code>, <code>01</code>, and <code>11</code>.</li>
+<li><strong>Grover operator</strong> (<code>QiskitGroverOperator</code>) puts both qubits in an equal
+     superposition and applies one Grover iteration (the oracle plus the diffuser),
+     which amplifies the marked state.</li>
 <li><strong>Simulate circuit</strong> runs the circuit locally using Qiskit Aer (1,024 shots).</li>
 <li><strong>View results</strong> writes the circuit and measurement results to HTML.</li>
 <li>Open <code>reports/quickstart/qiskit-grover.html</code> on your computer. The expected
@@ -208,13 +213,17 @@ log in with:</p>
    Bitstrings use qubit 0 on the left.</li>
 </ol>
 <p>The trigger runs immediately when started and then once per day while left
-running. For another immediate run, stop <strong>Start here</strong>, leave the other three
+running. For another immediate run, stop <strong>Start here</strong>, leave the other four
 processors running, then right-click <strong>Start here → Run Once</strong>. Each run adds
 one result card to the report.</p>
-<p>To try another search, stop <strong>Build Grover circuit</strong>, edit its <strong>Marked State</strong>
+<p>To try another search, stop <strong>Phase oracle</strong>, edit its <strong>Marked State</strong>
 to another two-bit value (for example <code>01</code>), and start it again before triggering
-the flow. Keep <strong>Num Iterations</strong> at <code>1</code> for this two-qubit example. Failed inputs
-are retained in the connections to the failure funnel for inspection.</p>
+the flow. Keep <strong>Num Iterations</strong> on <strong>Grover operator</strong> at <code>1</code> for this two-qubit
+example. Failed inputs are retained in the connections to the failure funnel for
+inspection. The oracle and operator exchange OpenQASM 2, so either box can be
+replaced by its Cirq counterpart (<code>CirqPhaseOracle</code>, <code>CirqGroverOperator</code>, both
+included in the image; set the Cirq box's <strong>Output Format</strong> to <code>qasm2</code>). See
+<a href="interchangeable-grover-flow.html">Interchangeable Grover</a>.</p>
 <h3 id="headless-check">Headless check</h3>
 <p>After NiFi is healthy, the following starts the flow, checks the new report for
 <code>10</code> with probability at least 0.99, and stops the flow again:</p>
@@ -225,17 +234,20 @@ are retained in the connections to the failure funnel for inspection.</p>
 <code>--check-only</code> to confirm the canvas is present and stopped without running it.
 The smoke check expects the default target <code>10</code>.</p>
 <h3 id="existing-installations">Existing installations</h3>
-<p>Rebuilding preserves your saved canvas. To add the new example without deleting
-existing flows, drag a Process Group onto the NiFi canvas, choose the option to
-upload a flow definition, and select <code>demo/grover/qiskit-grover.json</code>. The new
-group is <strong>Quanifi quickstart — Qiskit Grover</strong>. Do not use <code>down -v</code> to upgrade
-an installation whose flows or reports you want to keep.</p>
-<h3 id="advanced-example">Advanced example</h3>
-<p>The old matrix is available in <code>demo/grover/grover-3x3.json</code> for users who want
-to compare three builders across three simulators. Import it separately when
-ready. All its processor types remain included in the image. Its local runner is
-<code>python3 tools/build_grover_examples.py --run</code>; the default Docker smoke check
-checks only the simple Qiskit flow.</p>
+<p>An existing installation keeps its old canvas. The canvas lives in
+<code>conf/flow.json.gz</code> inside the <code>nifi-conf</code> volume, and the entrypoint only
+seeds the image's canvas when that file is absent. <code>docker compose up --build</code>
+therefore updates the image (including newly added processors) but not the
+canvas you see. To get the new default canvas, either:</p>
+<ul>
+<li>reset with <code>docker compose down -v</code> and then <code>docker compose up --build</code>. This
+  deletes every NiFi volume, including flows you built and queued data; the host
+  <code>reports/</code> directory is a bind mount and is kept; or</li>
+<li>keep your flows: after <code>docker compose up --build</code>, stop and delete the old
+  <strong>Quanifi quickstart — Qiskit Grover</strong> group, then drag a Process Group onto
+  the canvas, choose the option to upload a flow definition, and select
+  <code>demo/grover/qiskit-grover.json</code>.</li>
+</ul>
 <h2 id="configuration">Configuration</h2>
 <p>Every variable below can be set in the shell or in a <code>.env</code> file next to
 <code>compose.yaml</code>.</p>
@@ -260,7 +272,7 @@ checks only the simple Qiskit flow.</p>
 </tr>
 <tr>
 <td><code>QUANIFI_NIFI_PASSWORD</code></td>
-<td><code>quanifi-demo-password</code></td>
+<td><code>quanifipassword</code></td>
 <td>NiFi single-user login password.</td>
 </tr>
 <tr>
@@ -325,7 +337,7 @@ checks only the simple Qiskit flow.</p>
 </tr>
 <tr>
 <td><code>QUANIFI_ADMIN_PASSWORD</code></td>
-<td><code>quanifi-demo-password</code></td>
+<td><code>quanifipassword</code></td>
 <td>Report browser's bootstrap administrator password.</td>
 </tr>
 <tr>
@@ -345,6 +357,7 @@ checks only the simple Qiskit flow.</p>
 </tr>
 </tbody>
 </table>
+<p>NiFi re-applies <code>QUANIFI_NIFI_USERNAME</code>/<code>QUANIFI_NIFI_PASSWORD</code> on every container start, so a changed value (including the new default <code>quanifipassword</code>, which replaced <code>quanifi-demo-password</code>) takes effect after <code>docker compose up -d</code>. The report browser creates its administrator only once: to apply a changed <code>QUANIFI_ADMIN_PASSWORD</code> to an existing account, run <code>docker compose --profile web run --rm web python manage.py bootstrap_admin --reset-password</code>.</p>
 <h2 id="stopping-and-resetting">Stopping and resetting</h2>
 <ul>
 <li><code>docker compose down</code> stops the container but <strong>keeps every volume</strong>,
@@ -532,7 +545,7 @@ the current image, then <code>docker compose up</code> again.</p>
 translation (<code>docker buildx build --platform linux/amd64 -f
 docker/nifi/Dockerfile --target runtime ...</code>): it succeeded in <strong>~2m20s</strong> on
 the reference machine, and an optional full run under emulation reached
-<code>healthy</code> in <strong>~1 minute</strong> and passed the previous advanced demo (all 9 cells <code>110</code>, PASS). These timings are specific to that machine.</p>
+<code>healthy</code> in <strong>~1 minute</strong> and passed the nine-circuit Grover demo shipped at the time (all 9 cells <code>110</code>, PASS). These timings are specific to that machine.</p>
       </article>
     </main>
   </div>

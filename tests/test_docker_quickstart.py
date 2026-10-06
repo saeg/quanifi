@@ -149,7 +149,14 @@ class TestSelectRealTree:
             str(ROOT / "docker/processors.txt"), ROOT / "nifi_extensions"
         )
         assert [p["type"] for p in manifest["processors"]] == expected_names
-        assert manifest["helpers"] == ["reporting"]
+        assert manifest["helpers"] == [
+            "cirq_qaoa",
+            "pauli_dsl",
+            "qaoa_contract",
+            "qiskit_qaoa",
+            "qrisp_qaoa",
+            "reporting",
+        ]
 
         from conftest import MockContext  # noqa: F401 - installs nifiapi stubs
 
@@ -167,7 +174,7 @@ class TestSelectRealTree:
 
 class TestFlow:
     def _manifest_for_canvas(self, tmp_path):
-        canvas = json.loads((ROOT / "demo/grover/grover-3x3.json").read_text())
+        canvas = json.loads((ROOT / "demo/grover/qiskit-grover.json").read_text())
         types = qb.python_types(canvas["flowContents"])
         manifest = {
             "source": "docker/processors.txt",
@@ -185,22 +192,22 @@ class TestFlow:
         out = tmp_path / "flow" / "flow.json.gz"
 
         count = qb.build_flow(
-            str(ROOT / "demo/grover/grover-3x3.json"), manifest_path, out
+            str(ROOT / "demo/grover/qiskit-grover.json"), manifest_path, out
         )
 
-        assert count == 8
+        assert count == 4
         with gzip.open(out, "rt", encoding="utf-8") as handle:
             flow = json.load(handle)
         root = flow["rootGroup"]
         group = root["processGroups"][0]
-        assert group["name"] == "Quanifi quickstart — Grover 3×3"
+        assert group["name"] == "Quanifi quickstart — Qiskit Grover"
         assert group["groupIdentifier"] == root["identifier"]
-        assert nifi_ready.python_processor_count(out) == 8
+        assert nifi_ready.python_processor_count(out) == 4
 
     def test_missing_processor_type_raises(self, tmp_path):
-        canvas = json.loads((ROOT / "demo/grover/grover-3x3.json").read_text())
+        canvas = json.loads((ROOT / "demo/grover/qiskit-grover.json").read_text())
         types = qb.python_types(canvas["flowContents"])
-        types.pop("QrispGroverCircuit")
+        types.pop("QiskitPhaseOracle")
         manifest = {
             "processors": [
                 {"type": t, "version": v, "dependencies": []} for t, v in types.items()
@@ -212,13 +219,13 @@ class TestFlow:
 
         with pytest.raises(ValueError, match="not in this image"):
             qb.build_flow(
-                str(ROOT / "demo/grover/grover-3x3.json"),
+                str(ROOT / "demo/grover/qiskit-grover.json"),
                 manifest_path,
                 tmp_path / "flow.json.gz",
             )
 
     def test_running_component_raises(self, tmp_path):
-        canvas = json.loads((ROOT / "demo/grover/grover-3x3.json").read_text())
+        canvas = json.loads((ROOT / "demo/grover/qiskit-grover.json").read_text())
         canvas["flowContents"]["processors"][0]["scheduledState"] = "RUNNING"
         canvas_path = tmp_path / "canvas.json"
         canvas_path.write_text(json.dumps(canvas))
@@ -628,74 +635,16 @@ class TestWatchEndToEnd:
 
 
 # ---------------------------------------------------------------------------
-# quickstart_smoke.evaluate_result
+# quickstart_smoke targets the shipped canvas
 # ---------------------------------------------------------------------------
 
 
-def _valid_branches():
-    return [
-        {"label": "{} and {}".format(comp, engine), "top": "110", "dissent": False}
-        for _, comp in qs.grover.BUILDERS
-        for engine in qs.grover.ENGINES
-    ]
-
-
-def _valid_doc():
-    return {
-        "assert.verdict": "PASS",
-        "consensus.branches": "9",
-        "consensus.branches_json": _valid_branches(),
-        "consensus.max_hellinger": "0.05",
-    }
-
-
-class TestEvaluateResult:
-    def test_valid_document(self):
-        assert qs.evaluate_result(_valid_doc()) == []
-
-    def test_verdict_fail_is_one_error(self):
-        doc = _valid_doc()
-        doc["assert.verdict"] = "FAIL"
-        errors = qs.evaluate_result(doc)
-        assert len(errors) == 1
-        assert "assert.verdict" in errors[0]
-
-    def test_eight_branches_is_one_error(self):
-        doc = _valid_doc()
-        doc["consensus.branches"] = "8"
-        errors = qs.evaluate_result(doc)
-        assert len(errors) == 1
-        assert "consensus.branches" in errors[0]
-
-    def test_one_wrong_top_is_one_error(self):
-        doc = _valid_doc()
-        doc["consensus.branches_json"][0]["top"] = "011"
-        errors = qs.evaluate_result(doc)
-        assert len(errors) == 1
-        assert "top" in errors[0]
-
-    def test_a_dissent_is_one_error(self):
-        doc = _valid_doc()
-        doc["consensus.branches_json"][0]["dissent"] = True
-        errors = qs.evaluate_result(doc)
-        assert len(errors) == 1
-        assert "dissented" in errors[0]
-
-    def test_max_hellinger_too_high_is_one_error(self):
-        doc = _valid_doc()
-        doc["consensus.max_hellinger"] = "0.2"
-        errors = qs.evaluate_result(doc)
-        assert len(errors) == 1
-        assert "max_hellinger" in errors[0]
-
-    def test_wrong_label_is_one_error(self):
-        doc = _valid_doc()
-        doc["consensus.branches_json"][0]["label"] = "Bogus label"
-        errors = qs.evaluate_result(doc)
-        assert len(errors) == 1
-        assert "branch labels" in errors[0]
-
-    def test_branches_json_as_str_is_accepted(self):
-        doc = _valid_doc()
-        doc["consensus.branches_json"] = json.dumps(doc["consensus.branches_json"])
-        assert qs.evaluate_result(doc) == []
+class TestSmokeTargets:
+    def test_smoke_looks_for_the_shipped_group_and_target(self):
+        canvas = json.loads((ROOT / "demo/grover/qiskit-grover.json").read_text())
+        group = canvas["flowContents"]
+        assert group["name"] == qs.grover.SIMPLE_GROUP_NAME
+        oracle = next(
+            p for p in group["processors"] if p["type"] == "QiskitPhaseOracle"
+        )
+        assert oracle["properties"]["Marked State"] == qs.grover.SIMPLE_TARGET
