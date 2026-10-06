@@ -59,3 +59,41 @@ class TestQrispQCCSDAnsatz:
         assert vqe_attrs["vqe.framework"] == "qrisp"
         assert "vqe.optimal_value" in vqe_attrs
         assert float(vqe_attrs["vqe.optimal_value"]) is not None
+
+
+class TestQrispVQEEnergyPrecision:
+    def _h2_ansatz_flowfile(self):
+        from MoleculeHamiltonian import MoleculeHamiltonian
+
+        ham = MoleculeHamiltonian().transform(MockContext(**{
+            "Molecule Geometry": "H 0 0 0; H 0 0 0.735",
+            "Basis Set": "sto-3g", "Charge": "0", "Multiplicity": "1",
+            "Compute Reference Energies": "true",
+        }), MockFlowFile())
+        assert ham.relationship == "success"
+        ff = result_to_flowfile(ham)
+        ans = QrispQCCSDAnsatz().transform(
+            MockContext(**{"Num Spin Orbitals": "0", "Num Electrons": "2"}), ff)
+        assert ans.relationship == "success"
+        return ff, result_to_flowfile(ans)
+
+    def test_tight_precision_reaches_fci(self):
+        ham_ff, ff = self._h2_ansatz_flowfile()
+        fci = float(ham_ff.getAttribute("hamiltonian.fci_energy"))
+        res = QrispVQE().transform(MockContext(**{
+            "Optimizer": "COBYLA", "Max Iterations": "100", "Shots": "256",
+            "Initial Parameters": "zeros", "Random Seed": "3",
+            "Energy Precision": "0.0005",
+        }), ff)
+        assert res.relationship == "success"
+        assert res.attributes["vqe.energy_precision"] == "0.0005"
+        assert abs(float(res.attributes["vqe.optimal_value"]) - fci) < 0.003
+
+    def test_invalid_precision_fails(self):
+        _, ff = self._h2_ansatz_flowfile()
+        res = QrispVQE().transform(MockContext(**{
+            "Optimizer": "COBYLA", "Max Iterations": "10", "Shots": "256",
+            "Initial Parameters": "zeros", "Energy Precision": "0",
+        }), ff)
+        assert res.relationship == "failure"
+        assert "vqe.error" in res.attributes
