@@ -31,7 +31,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.11", "black>=25.1"]
+dev = ["pytest>=8.0", "ruff>=0.11", "black>=25.1", "PyYAML>=6.0"]
 docs = ["Markdown>=3.7", "Pygments>=2.19"]
 # Not a default dependency: iqm-client pulls a large tree that would constrain
 # the pinned qiskit/cirq versions. NiFi installs it per-processor from
