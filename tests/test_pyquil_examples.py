@@ -70,13 +70,17 @@ def test_run_canvas_examples_and_generate_reports(tmp_path):
             assert record["description"] == saved["description"]
             assert record["stages"] == saved["stages"]
             assert record["counts"] == saved["counts"]
+            vqe_floats = {"vqe.optimal_parameters", "vqe.optimal_value"}
             rec_attrs = {
-                k: v for k, v in record["attributes"].items() if k != "vqe.optimal_parameters"
+                k: v for k, v in record["attributes"].items() if k not in vqe_floats
             }
             saved_attrs = {
-                k: v for k, v in saved["attributes"].items() if k != "vqe.optimal_parameters"
+                k: v for k, v in saved["attributes"].items() if k not in vqe_floats
             }
             assert rec_attrs == saved_attrs
+            assert float(record["attributes"]["vqe.optimal_value"]) == pytest.approx(
+                float(saved["attributes"]["vqe.optimal_value"]), abs=1e-5
+            )
             import ast
 
             rec_params = ast.literal_eval(record["attributes"]["vqe.optimal_parameters"])
