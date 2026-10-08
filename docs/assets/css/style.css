@@ -136,12 +136,12 @@ body {
 
 .btn-warning {
   background-color: var(--accent);
-  color: #ffffff;
+  color: #2b1a05;
 }
 
 .btn-warning:hover {
   background-color: var(--accent-dark);
-  color: #ffffff;
+  color: #2b1a05;
 }
 
 .btn-github {
@@ -485,7 +485,7 @@ body {
 }
 
 .breadcrumbs a {
-  color: var(--primary);
+  color: var(--primary-dark);
   text-decoration: none;
 }
 
@@ -536,14 +536,15 @@ body {
   color: #334155;
 }
 
-.main-content a {
-  color: var(--primary);
+/* :where() keeps this at element specificity so .btn-*, .citation-badge etc. win */
+:where(.main-content) a {
+  color: var(--primary-dark);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
-.main-content a:hover {
-  color: var(--primary-dark);
+:where(.main-content) a:hover {
+  color: #005b6e;
 }
 
 .main-content ul, .main-content ol {
@@ -802,6 +803,7 @@ code {
 
 .step-badge.accent {
   background: var(--accent);
+  color: #2b1a05;
 }
 
 .step-card h3 {
@@ -953,7 +955,7 @@ code {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  color: var(--primary);
+  color: var(--primary-dark);
   background: var(--primary-light);
   padding: 2px 8px;
   border-radius: var(--radius-sm);
@@ -978,7 +980,7 @@ code {
 .card-link {
   font-size: 13px;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--primary-dark);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -1091,7 +1093,7 @@ code {
    ========================================================================== */
 
 .site-footer {
-  background-color: var(--primary);
+  background-color: var(--primary-dark);
   border-top: 4px solid var(--accent);
   color: #ffffff;
   padding: 50px 0 0;
@@ -1775,7 +1777,7 @@ details.solution-accordion .solution-content h4 {
 
 .team-link-btn.btn-orcid {
   background-color: #a6ce39;
-  color: #ffffff !important;
+  color: #1d2b00 !important;
 }
 .team-link-btn.btn-orcid:hover {
   background-color: #8bb226;
@@ -1820,4 +1822,34 @@ details.solution-accordion .solution-content h4 {
   line-height: 1.4;
 }
 
+/* Team page: restore mobile stacking */
+@media (max-width: 992px) {
+  .content-wrapper.team-page-wrapper {
+    grid-template-columns: 1fr;
+  }
+  .team-page-wrapper .main-content {
+    min-width: 0;
+  }
+}
 
+@media (max-width: 600px) {
+  .team-card {
+    flex: 1 1 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+/* Nav "Getting Started" highlight: white text, arrow on an orange chip for contrast */
+.main-menu > li > a.nav-start {
+  color: #ffffff;
+}
+.nav-start-arrow {
+  display: inline-block;
+  background: var(--accent);
+  color: #2b1a05;
+  font-size: 9px;
+  line-height: 1;
+  padding: 3px 4px;
+  border-radius: 3px;
+}
