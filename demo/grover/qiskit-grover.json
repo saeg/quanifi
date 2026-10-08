@@ -8,7 +8,7 @@
       "x": 0,
       "y": 0
     },
-    "comments": "Find target 10 with two qubits and one Grover iteration.",
+    "comments": "Find target 10 with two qubits: a phase oracle, one Grover iteration and a local Aer simulation.",
     "processors": [
       {
         "identifier": "3f90caf7-773a-55c4-b03c-e038c042f786",
@@ -21,7 +21,7 @@
           "x": 0,
           "y": 130
         },
-        "comments": "Right-click and Run Once to send one input. Start the other three processors first.",
+        "comments": "Right-click and Run Once to send one input. Start the other four processors first.",
         "bundle": {
           "group": "org.apache.nifi",
           "artifact": "nifi-standard-nar",
@@ -51,17 +51,17 @@
         "maxBackoffPeriod": "10 mins"
       },
       {
-        "identifier": "95f95f3f-4420-59a9-9b79-d1c9571f7623",
-        "instanceIdentifier": "92e383b0-a75e-5499-a390-279a5d7752db",
+        "identifier": "d41b65b1-71bc-53f5-9697-906bbca0cc15",
+        "instanceIdentifier": "039c1499-6c38-54ab-bbb8-df6607ed927f",
         "groupIdentifier": "d147b572-6271-5b16-a5ff-ba875849b3d4",
-        "name": "Build Grover circuit",
-        "type": "QiskitGroverCircuit",
+        "name": "Phase oracle",
+        "type": "QiskitPhaseOracle",
         "componentType": "PROCESSOR",
         "position": {
           "x": 0,
           "y": 340
         },
-        "comments": "Search for 10 using two qubits and one Grover iteration. Change Marked State here.",
+        "comments": "Mark the target 10 with a -1 phase on two qubits. Change Marked State here.",
         "bundle": {
           "group": "org.apache.nifi",
           "artifact": "python-extensions",
@@ -69,6 +69,46 @@
         },
         "properties": {
           "Marked State": "10",
+          "Insert Barriers": "false",
+          "Output Format": "qasm2"
+        },
+        "propertyDescriptors": {},
+        "style": {},
+        "schedulingPeriod": "0 sec",
+        "schedulingStrategy": "TIMER_DRIVEN",
+        "executionNode": "ALL",
+        "penaltyDuration": "30 sec",
+        "yieldDuration": "1 sec",
+        "bulletinLevel": "WARN",
+        "runDurationMillis": 0,
+        "concurrentlySchedulableTaskCount": 1,
+        "autoTerminatedRelationships": [
+          "original"
+        ],
+        "scheduledState": "ENABLED",
+        "retryCount": 0,
+        "retriedRelationships": [],
+        "backoffMechanism": "PENALIZE_FLOWFILE",
+        "maxBackoffPeriod": "10 mins"
+      },
+      {
+        "identifier": "74a2fd9e-624c-5106-9d0d-8e9b75867c6e",
+        "instanceIdentifier": "cf908bc7-cdeb-5bf4-9725-50bb10f67031",
+        "groupIdentifier": "d147b572-6271-5b16-a5ff-ba875849b3d4",
+        "name": "Grover operator",
+        "type": "QiskitGroverOperator",
+        "componentType": "PROCESSOR",
+        "position": {
+          "x": 0,
+          "y": 550
+        },
+        "comments": "Prepare the uniform superposition and apply one Grover iteration (oracle + diffuser).",
+        "bundle": {
+          "group": "org.apache.nifi",
+          "artifact": "python-extensions",
+          "version": "0.1.0"
+        },
+        "properties": {
           "Num Iterations": "1",
           "Insert Barriers": "false",
           "Output Format": "qasm2"
@@ -101,7 +141,7 @@
         "componentType": "PROCESSOR",
         "position": {
           "x": 0,
-          "y": 550
+          "y": 760
         },
         "comments": "Run the circuit on the local Qiskit Aer simulator with 1024 shots.",
         "bundle": {
@@ -149,7 +189,7 @@
         "componentType": "PROCESSOR",
         "position": {
           "x": 0,
-          "y": 760
+          "y": 970
         },
         "comments": "Open reports/quickstart/qiskit-grover.html on your host to see the result.",
         "bundle": {
@@ -161,6 +201,7 @@
           "Reports Directory": "reports/quickstart",
           "Flow Name": "qiskit-grover",
           "Output Mode": "Local HTML",
+          "Reports API URL": "http://web:8080/api/v1/report-runs/",
           "Reports API Timeout Seconds": "10"
         },
         "propertyDescriptors": {},
@@ -199,11 +240,11 @@
           "instanceIdentifier": "d324a822-f094-583d-9458-d1dc8d37c6e1"
         },
         "destination": {
-          "id": "95f95f3f-4420-59a9-9b79-d1c9571f7623",
+          "id": "d41b65b1-71bc-53f5-9697-906bbca0cc15",
           "groupId": "d147b572-6271-5b16-a5ff-ba875849b3d4",
-          "name": "Build Grover circuit",
+          "name": "Phase oracle",
           "type": "PROCESSOR",
-          "instanceIdentifier": "92e383b0-a75e-5499-a390-279a5d7752db"
+          "instanceIdentifier": "039c1499-6c38-54ab-bbb8-df6607ed927f"
         },
         "selectedRelationships": [
           "success"
@@ -225,11 +266,44 @@
         "componentType": "CONNECTION",
         "name": "success",
         "source": {
-          "id": "95f95f3f-4420-59a9-9b79-d1c9571f7623",
+          "id": "d41b65b1-71bc-53f5-9697-906bbca0cc15",
           "groupId": "d147b572-6271-5b16-a5ff-ba875849b3d4",
-          "name": "Build Grover circuit",
+          "name": "Phase oracle",
           "type": "PROCESSOR",
-          "instanceIdentifier": "92e383b0-a75e-5499-a390-279a5d7752db"
+          "instanceIdentifier": "039c1499-6c38-54ab-bbb8-df6607ed927f"
+        },
+        "destination": {
+          "id": "74a2fd9e-624c-5106-9d0d-8e9b75867c6e",
+          "groupId": "d147b572-6271-5b16-a5ff-ba875849b3d4",
+          "name": "Grover operator",
+          "type": "PROCESSOR",
+          "instanceIdentifier": "cf908bc7-cdeb-5bf4-9725-50bb10f67031"
+        },
+        "selectedRelationships": [
+          "success"
+        ],
+        "labelIndex": 0,
+        "zIndex": 0,
+        "bends": [],
+        "backPressureObjectThreshold": 1000,
+        "backPressureDataSizeThreshold": "100 MB",
+        "flowFileExpiration": "0 sec",
+        "prioritizers": [],
+        "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+        "loadBalanceCompression": "DO_NOT_COMPRESS"
+      },
+      {
+        "identifier": "a6041701-83cf-5ac8-9162-cf48a2d483c5",
+        "instanceIdentifier": "47452941-1754-56fc-98ab-fb634e370354",
+        "groupIdentifier": "d147b572-6271-5b16-a5ff-ba875849b3d4",
+        "componentType": "CONNECTION",
+        "name": "success",
+        "source": {
+          "id": "74a2fd9e-624c-5106-9d0d-8e9b75867c6e",
+          "groupId": "d147b572-6271-5b16-a5ff-ba875849b3d4",
+          "name": "Grover operator",
+          "type": "PROCESSOR",
+          "instanceIdentifier": "cf908bc7-cdeb-5bf4-9725-50bb10f67031"
         },
         "destination": {
           "id": "98feba90-c1a9-5a83-aaba-ddef8f55f69f",
@@ -252,8 +326,8 @@
         "loadBalanceCompression": "DO_NOT_COMPRESS"
       },
       {
-        "identifier": "a6041701-83cf-5ac8-9162-cf48a2d483c5",
-        "instanceIdentifier": "47452941-1754-56fc-98ab-fb634e370354",
+        "identifier": "45798436-ddfe-5573-82c0-39b72b89c0f9",
+        "instanceIdentifier": "c4101bca-5080-5719-8811-44c8e528ba0c",
         "groupIdentifier": "d147b572-6271-5b16-a5ff-ba875849b3d4",
         "componentType": "CONNECTION",
         "name": "success",
@@ -285,17 +359,50 @@
         "loadBalanceCompression": "DO_NOT_COMPRESS"
       },
       {
-        "identifier": "a75512e5-0600-5c0a-b16b-a795c1157090",
-        "instanceIdentifier": "9caa0d69-3275-533d-a517-a3f647dce1aa",
+        "identifier": "9bc20df3-e162-5609-a588-568da096788e",
+        "instanceIdentifier": "72ffe36d-6ebe-5a3d-b889-f346948b5ba8",
         "groupIdentifier": "d147b572-6271-5b16-a5ff-ba875849b3d4",
         "componentType": "CONNECTION",
         "name": "failure",
         "source": {
-          "id": "95f95f3f-4420-59a9-9b79-d1c9571f7623",
+          "id": "d41b65b1-71bc-53f5-9697-906bbca0cc15",
           "groupId": "d147b572-6271-5b16-a5ff-ba875849b3d4",
-          "name": "Build Grover circuit",
+          "name": "Phase oracle",
           "type": "PROCESSOR",
-          "instanceIdentifier": "92e383b0-a75e-5499-a390-279a5d7752db"
+          "instanceIdentifier": "039c1499-6c38-54ab-bbb8-df6607ed927f"
+        },
+        "destination": {
+          "id": "4510efbb-16f0-5fd3-9445-5f4d0dc9f583",
+          "groupId": "d147b572-6271-5b16-a5ff-ba875849b3d4",
+          "name": "Failures (inspect the queue)",
+          "type": "FUNNEL",
+          "instanceIdentifier": "28ba8691-d400-584b-8392-a93edf2ecaf2"
+        },
+        "selectedRelationships": [
+          "failure"
+        ],
+        "labelIndex": 0,
+        "zIndex": 0,
+        "bends": [],
+        "backPressureObjectThreshold": 1000,
+        "backPressureDataSizeThreshold": "100 MB",
+        "flowFileExpiration": "0 sec",
+        "prioritizers": [],
+        "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+        "loadBalanceCompression": "DO_NOT_COMPRESS"
+      },
+      {
+        "identifier": "71023964-f887-5c10-b397-f23f5178d9d3",
+        "instanceIdentifier": "f9353e84-3df0-5059-a51d-5b64adc19a5a",
+        "groupIdentifier": "d147b572-6271-5b16-a5ff-ba875849b3d4",
+        "componentType": "CONNECTION",
+        "name": "failure",
+        "source": {
+          "id": "74a2fd9e-624c-5106-9d0d-8e9b75867c6e",
+          "groupId": "d147b572-6271-5b16-a5ff-ba875849b3d4",
+          "name": "Grover operator",
+          "type": "PROCESSOR",
+          "instanceIdentifier": "cf908bc7-cdeb-5bf4-9725-50bb10f67031"
         },
         "destination": {
           "id": "4510efbb-16f0-5fd3-9445-5f4d0dc9f583",
@@ -396,8 +503,8 @@
         },
         "zIndex": 0,
         "width": 850,
-        "height": 90,
-        "label": "Qiskit Grover: find 10 among four possible states. Start the group to run. Open reports/quickstart/qiskit-grover.html. For another run, stop Start here and choose Run Once.",
+        "height": 110,
+        "label": "Qiskit Grover: find 10 among four possible states with a phase oracle and one Grover operator. Start the group to run. Open reports/quickstart/qiskit-grover.html. For another run, stop Start here and choose Run Once.",
         "style": {
           "background-color": "#eaf2ff",
           "font-size": "18px"

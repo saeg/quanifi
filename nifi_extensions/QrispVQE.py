@@ -112,7 +112,21 @@ class QrispVQE(FlowFileTransform):
             default_value="",
             expression_language_scope=ExpressionLanguageScope.FLOWFILE_ATTRIBUTES,
         )
-        self.descriptors = [self.optimizer, self.max_iterations, self.shots, self.initial_parameters, self.random_seed]
+        self.energy_precision = PropertyDescriptor(
+            name="Energy Precision",
+            description=(
+                "Target precision (Hartree-like energy units) of every Hamiltonian expectation "
+                "value, during training and for the reported vqe.optimal_value. Qrisp evaluates "
+                "energies by sampling, with shots growing as 1/precision^2: the default 0.01 is "
+                "fast but its sampling noise can exceed chemical accuracy (0.0016); use 0.001 "
+                "or smaller when comparing against exact (e.g. FCI) energies."
+            ),
+            required=True,
+            default_value="0.01",
+            validators=[StandardValidators.NUMBER_VALIDATOR],
+            expression_language_scope=ExpressionLanguageScope.FLOWFILE_ATTRIBUTES,
+        )
+        self.descriptors = [self.optimizer, self.max_iterations, self.shots, self.initial_parameters, self.random_seed, self.energy_precision]
 
     def getPropertyDescriptors(self):
         return self.descriptors
@@ -156,7 +170,7 @@ class QrispVQE(FlowFileTransform):
             init_function = create_hartree_fock_init_function(m, nelec)
             return ansatz_function, num_params, 1, atype, init_function
         else:
-            from QrispAnsatz import _build_ansatz_function
+            from qrisp_ansatz import _build_ansatz_function
             reps = int(flowFile.getAttribute("ansatz.reps") or "2")
             entanglement = flowFile.getAttribute("ansatz.entanglement") or "full"
             ansatz_function, per_layer = _build_ansatz_function(atype, n, entanglement)
@@ -180,6 +194,9 @@ class QrispVQE(FlowFileTransform):
             shots = int(get(self.shots))
             seed_raw = (get(self.random_seed) or "").strip()
             seed = int(seed_raw) if seed_raw else None
+            precision = float(get(self.energy_precision))
+            if precision <= 0:
+                raise ValueError("Energy Precision must be > 0")
         except (TypeError, ValueError) as exc:
             msg = "bad numeric property value: {}".format(exc)
             self.logger.error("QrispVQE: " + msg)
@@ -236,6 +253,7 @@ class QrispVQE(FlowFileTransform):
                 circuit_generator = vqe.train_function(
                     QuantumVariable(n), depth=reps, max_iter=maxiter,
                     optimizer=_OPTIMIZER[opt_name],
+                    mes_kwargs={"precision": precision},
                     init_type="random", init_point=init_point)
                 # Energy and counts from the SAME trained state, so they are consistent.
                 # qrisp >=0.9 replaced QubitOperator.get_measurement(qv) with
@@ -246,7 +264,7 @@ class QrispVQE(FlowFileTransform):
                     circuit_generator(qv_e)
                     return qv_e
                 optimal_value = float(np.real(
-                    hamiltonian.expectation_value(_trained_state, precision=0.01)()))
+                    hamiltonian.expectation_value(_trained_state, precision=precision)()))
 
                 qv_c = QuantumVariable(n)
                 circuit_generator(qv_c)
@@ -294,6 +312,7 @@ class QrispVQE(FlowFileTransform):
             "vqe.ansatz_type": atype,
             "vqe.num_qubits": str(n),
             "vqe.shots": str(shots),
+            "vqe.energy_precision": str(precision),
             "vqe.elapsed_seconds": "{:.4f}".format(elapsed),
             "perf.elapsed_seconds": "{:.4f}".format(elapsed),
             **({"run.seed": str(seed)} if seed is not None else {}),

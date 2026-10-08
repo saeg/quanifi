@@ -214,9 +214,18 @@ class CirqStatevectorSimulator(FlowFileTransform):
 
         if fmt == "cirq_json":
             circuit = cirq.read_json(json_text=raw.decode("utf-8"))
+            declared_qubits = None
         elif fmt == "qasm2":
+            import re
+            qasm_str = raw.decode("utf-8")
             from cirq.contrib.qasm_import import circuit_from_qasm
-            circuit = circuit_from_qasm(raw.decode("utf-8"))
+            circuit = circuit_from_qasm(qasm_str)
+            qreg_decls = re.findall(r"qreg\s+([A-Za-z_]\w*)\s*\[\s*(\d+)\s*\]", qasm_str)
+            declared_qubits = [
+                cirq.NamedQubit(f"{name}_{i}")
+                for name, size in qreg_decls
+                for i in range(int(size))
+            ]
         else:
             msg = (
                 f"Unsupported circuit.format '{fmt}'. "
@@ -237,7 +246,17 @@ class CirqStatevectorSimulator(FlowFileTransform):
             if not cirq.is_measurement(op)
         )
 
-        qubits = sorted(circuit.all_qubits())
+        if declared_qubits:
+            qubits = declared_qubits
+        else:
+            qubits = sorted(circuit.all_qubits())
+            try:
+                declared_num = int(flowFile.getAttribute("circuit.num_qubits") or 0)
+            except (TypeError, ValueError):
+                declared_num = 0
+            if declared_num > len(qubits) and all(isinstance(q, cirq.LineQubit) for q in qubits):
+                qubits = [cirq.LineQubit(i) for i in range(declared_num)]
+
         n = len(qubits)
         if n == 0:
             return FlowFileTransformResult(

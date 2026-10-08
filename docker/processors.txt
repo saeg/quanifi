@@ -3,9 +3,35 @@
 # and pre-installs their Python dependencies. Select another list with
 #   QUANIFI_PROCESSORS=path/to/list.txt docker compose build   (path inside the repo)
 # or every processor with QUANIFI_PROCESSORS=all (set QUANIFI_PREBAKE=false then).
+# Grover Search & Amplitude Amplification
 QiskitGroverCircuit
 CirqGroverCircuit
 QrispGroverCircuit
+QiskitPhaseOracle
+QiskitGroverOperator
+CirqPhaseOracle
+CirqGroverOperator
+
+# QAOA Problem Encoders & Hamiltonians (including Classiq MIS formulation)
+MaxIndependentSetProblem
+MaxCutProblem
+MaxCliqueProblem
+PortfolioRebalancingProblem
+QuboToHamiltonian
+QiskitHamiltonian
+CirqHamiltonian
+QrispHamiltonian
+
+# QAOA Solvers & Circuit Builders
+QiskitQAOA
+CirqQAOA
+QrispQAOA
+QiskitQAOACircuit
+CirqQAOACircuit
+QrispQAOACircuit
+QuantumQAOAEvaluator
+
+# Quantum Simulators & Reporting
 QiskitAerSimulator
 CirqSimulator
 QrispSimulator

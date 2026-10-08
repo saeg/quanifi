@@ -188,9 +188,14 @@ class CirqSimulator(FlowFileTransform):
         qubits = set(circuit.all_qubits())
         if fmt == "qasm2":
             # cirq's qasm importer names qubits "<reg>_<i>"
+            ordered = []
             for name, size in re.findall(r"qreg\s+([A-Za-z_]\w*)\s*\[\s*(\d+)\s*\]",
                                          raw.decode("utf-8", errors="ignore")):
-                qubits |= {cirq.NamedQubit(f"{name}_{i}") for i in range(int(size))}
+                for i in range(int(size)):
+                    ordered.append(cirq.NamedQubit(f"{name}_{i}"))
+            if ordered:
+                return ordered
+            return sorted(qubits)
         else:
             try:
                 declared = int(flowFile.getAttribute("circuit.num_qubits") or 0)
@@ -198,7 +203,7 @@ class CirqSimulator(FlowFileTransform):
                 declared = 0
             if declared > len(qubits) and all(isinstance(q, cirq.LineQubit) for q in qubits):
                 qubits |= {cirq.LineQubit(i) for i in range(declared)}
-        return sorted(qubits)
+            return sorted(qubits)
 
     def transform(self, context, flowFile):
         import cirq

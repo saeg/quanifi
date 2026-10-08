@@ -23,7 +23,7 @@ docs:
     {{python}} tools/generate_docs_site.py
 
 grover-examples:
-    {{python}} tools/build_grover_examples.py --run
+    {{python}} tools/build_grover_examples.py
 
 quickstart-smoke:
     {{python}} tools/quickstart_smoke.py

@@ -135,3 +135,5 @@ token*IBM*key*.json
 # headless run of tools/build_grover_examples.py.
 reports/quickstart/
 reports/quickstart-local/
+reports/h2-vqe/
+reports/h2-vqe-local/

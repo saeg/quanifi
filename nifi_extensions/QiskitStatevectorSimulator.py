@@ -204,6 +204,7 @@ class QiskitStatevectorSimulator(FlowFileTransform):
         qasm3_attr = flowFile.getAttribute("circuit.qasm3") or ""
 
         circuit = None
+        qasm2_error = None
 
         # Try to load circuit from content first.
         if fmt == "qpy" and raw:
@@ -212,6 +213,15 @@ class QiskitStatevectorSimulator(FlowFileTransform):
                 circuit = qpy.load(io.BytesIO(raw))[0]
             except Exception:
                 pass
+
+        if circuit is None and fmt in ("qasm2", "qasm") and raw:
+            try:
+                from qiskit import QuantumCircuit
+                # Match Qiskit's legacy qelib1 dialect, including p/swap gates
+                # emitted inside custom definitions by Qrisp's exporter.
+                circuit = QuantumCircuit.from_qasm_str(raw.decode("utf-8"))
+            except Exception as exc:
+                qasm2_error = str(exc)
 
         if circuit is None and fmt == "qasm3" and raw:
             raw_str = raw.decode("utf-8").strip()
@@ -241,6 +251,12 @@ class QiskitStatevectorSimulator(FlowFileTransform):
                 )
 
         if circuit is None:
+            if qasm2_error is not None:
+                msg = "StatevectorSimulator: could not parse QASM2 content: {}".format(qasm2_error)
+                self.logger.error(msg)
+                return FlowFileTransformResult(
+                    relationship="failure", attributes={"sim.error": msg},
+                )
             msg = (
                 "StatevectorSimulator: no circuit found in FlowFile content or "
                 "circuit.qasm3 attribute. Connect this processor to a circuit "

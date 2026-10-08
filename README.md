@@ -32,12 +32,15 @@ Use these default credentials on your first login:
 
 | Username | Password |
 | --- | --- |
-| `admin` | `quanifi-demo-password` |
+| `admin` | `quanifipassword` |
 
 On the canvas, right-click **Quanifi quickstart — Qiskit Grover** and choose
-**Start** to run the demo: **Start here → Build Grover circuit → Simulate circuit → View results**.
-It searches for `10` using two qubits and one Grover iteration. Open
+**Start** to run the demo: **Start here → Phase oracle → Grover operator → Simulate circuit → View results**.
+A Qiskit phase oracle marks `10`, one Grover iteration amplifies it on two
+qubits, and Qiskit Aer simulates the result. Open
 `reports/quickstart/qiskit-grover.html` on your computer to see the result.
+Upgrading an existing install? The old canvas is kept until `docker compose down -v`;
+see [Existing installations](docs/guides/DOCKER_QUICKSTART.md#existing-installations).
 
 If port `8443` is already in use, add `QUANIFI_NIFI_PORT=18443` to a local
 `.env` file beside `compose.yaml`, then run `docker compose up` again and open
@@ -45,7 +48,7 @@ If port `8443` is already in use, add `QUANIFI_NIFI_PORT=18443` to a local
 
 The optional report browser (`docker compose --profile web up`) is available
 at <http://localhost:8080/>. Its default email is `admin@example.com` and its
-password is `quanifi-demo-password`.
+password is `quanifipassword`.
 
 These are demo defaults. NiFi credentials can be overridden with
 `QUANIFI_NIFI_USERNAME` and `QUANIFI_NIFI_PASSWORD`; the report browser uses

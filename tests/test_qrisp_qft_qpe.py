@@ -7,6 +7,8 @@ QrispPhaseEstimation tests call QPE + get_measurement() and are marked slow.
 
 import json
 
+import numpy as np
+
 import pytest
 
 from QrispQFTCircuit import QrispQFTCircuit
@@ -20,6 +22,29 @@ from conftest import MockContext, MockFlowFile
 # ---------------------------------------------------------------------------
 
 class TestQrispQFTCircuit:
+
+    @pytest.mark.parametrize("n", [1, 2, 3, 4])
+    @pytest.mark.parametrize("inverse", [False, True])
+    @pytest.mark.parametrize("do_swaps", [False, True])
+    def test_operator_matches_fourier_transform(self, n, inverse, do_swaps):
+        """Check phases on every input, including the one-qubit seed-X regression."""
+        from qiskit import QuantumCircuit
+        from qiskit.quantum_info import Operator
+
+        result = self._run(n, str(inverse).lower(), str(do_swaps).lower())
+        assert result.relationship == "success"
+        actual = Operator(QuantumCircuit.from_qasm_str(result.contents.decode())).data
+        dimension = 2 ** n
+        indices = np.arange(dimension)
+        expected = np.exp(2j * np.pi * np.outer(indices, indices) / dimension) / np.sqrt(dimension)
+        if not do_swaps:
+            reversed_indices = [int(format(i, f"0{n}b")[::-1], 2) for i in indices]
+            expected = expected[reversed_indices, :]
+        if inverse:
+            expected = expected.conj().T
+        overlap = np.vdot(expected, actual)
+        phase = overlap / abs(overlap) if abs(overlap) > 1e-12 else 1
+        np.testing.assert_allclose(actual / phase, expected, atol=1e-10, rtol=0)
 
     def _run(self, n=3, inverse="false", do_swaps="true"):
         ctx = MockContext(**{

@@ -49,6 +49,7 @@ class PropertyDescriptor:
         self.expression_language_scope = kwargs.get(
             "expression_language_scope", _ExpressionLanguageScope.NONE)
         self.allowable_values = kwargs.get("allowable_values")
+        self.sensitive = kwargs.get("sensitive", False)
 
 
 class _StandardValidators:

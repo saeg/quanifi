@@ -68,13 +68,6 @@
           </svg>
           GitHub
         </a>
-        <a href="https://github.com/saeg/quanifi/blob/main/LICENSE" target="_blank" rel="noopener" class="nav-extra-link" title="GNU AGPL-3.0 License">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M14.31 8l5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16L3.95 6.06M14.31 16H2.83m13.79-4l-5.74 9.94"></path>
-          </svg>
-          AGPL-3.0
-        </a>
       </div>
     </div>
   </nav>
@@ -317,25 +310,29 @@ Cirq.</p>
 <p>Again expect the <code>110</code> peak with <code>sim.top_result = 110</code>, now with
 <code>sim.framework = cirq</code> in the report header.</p>
 <hr />
-<h2 id="qrisp-builder-and-the-33-matrix">Qrisp builder and the 3×3 matrix</h2>
-<p><code>QrispGroverCircuit</code> (0.1.0) is Qrisp's row of this builder matrix: the same
-<code>Marked State</code> / <code>Num Iterations</code> / <code>Output Format</code> properties as the other
-three builders, qasm2 output only. It is built from Qrisp's <code>tag_state</code> phase
-oracle and <code>grovers_alg</code> diffuser rather than a hand-written oracle circuit.</p>
+<h2 id="qrisp-builder">Qrisp builder</h2>
+<p><code>QrispGroverCircuit</code> (0.1.0) is Qrisp's counterpart to the all-in-one
+<code>QiskitGroverCircuit</code> and <code>CirqGroverCircuit</code> builders: the same
+<code>Marked State</code> / <code>Num Iterations</code> / <code>Output Format</code> properties, qasm2 output
+only. It is built from Qrisp's <code>tag_state</code> phase oracle and <code>grovers_alg</code>
+diffuser rather than a hand-written oracle circuit.</p>
 <p>The one thing to know before touching it: <strong>Qrisp's <code>tag_state</code> reads a
 binary string little-endian</strong> — its rightmost character is qubit 0 — while
-every builder in this matrix types <code>Marked State</code> q0-left (qubit 0 is the
+every other Grover builder types <code>Marked State</code> q0-left (qubit 0 is the
 leftmost character), so the processor tags the <em>reversed</em> string internally.
 Without that reversal, all three simulators would return the bit-reversed
 state for whatever target you typed. This is purely internal to the
 processor; <code>Marked State</code> behaves identically to the Qiskit, Cirq and
 PennyLane builders from the outside.</p>
-<p>This builder is the Qrisp row of the Docker quickstart's baked canvas — three
-builders (Qiskit, Cirq, Qrisp) times three simulators (Aer, Cirq, Qrisp) with
-a K=9 <code>QuantumConsensusOracle</code> vote and a <code>QuanifiReport</code> at the end. See
-<a href="docker-quickstart.html"><code>docs/guides/DOCKER_QUICKSTART.md</code></a> to run it with only
-Docker Desktop and <code>git</code> installed, or <code>tools/build_grover_examples.py --run</code>
-to run the same matrix headlessly against a local <code>.venv</code>.</p>
+<h2 id="flow-a-in-the-docker-quickstart">Flow A in the Docker quickstart</h2>
+<p>The Docker quickstart's default canvas (<code>demo/grover/qiskit-grover.json</code>, see
+<a href="docker-quickstart.html"><code>docs/guides/DOCKER_QUICKSTART.md</code></a>) is Flow A at its
+smallest: Marked State <code>10</code>, Num Iterations <code>1</code>, and Output Format <code>qasm2</code> on
+both the oracle and the operator. Flows B and C start from that canvas by
+swapping boxes; set any swapped-in Cirq box's Output Format to <code>qasm2</code>.
+<code>QiskitPhaseOracle</code>, <code>QiskitGroverOperator</code>, <code>CirqPhaseOracle</code>,
+<code>CirqGroverOperator</code>, <code>QrispGroverCircuit</code> and the Aer, Cirq and Qrisp
+simulators all ship in the default image.</p>
 <h2 id="differential-testing-in-one-canvas">Differential testing in one canvas</h2>
 <p>Run Flows A–C side by side into <strong>separate</strong> <code>QuanifiReport</code> flow names, or
 fan one <code>GenerateFlowFile</code> into all three chains and feed the simulator
