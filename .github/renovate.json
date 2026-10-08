@@ -1,0 +1,43 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":rebaseStalePrs"
+  ],
+  "labels": ["dependencies"],
+  "commitMessagePrefix": "chore(deps):",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 5am on monday"]
+  },
+  "packageRules": [
+    {
+      "description": "Group minor and patch updates for general Python packages",
+      "matchManagers": ["pep621"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "python dependencies (non-major)",
+      "schedule": ["before 6am on monday"]
+    },
+    {
+      "description": "Keep quantum framework SDK updates isolated for careful verification",
+      "matchPackageNames": [
+        "qiskit*",
+        "cirq*",
+        "qrisp*",
+        "pyquil*",
+        "pennylane*",
+        "qiskit-aer*",
+        "qiskit-ibm-runtime*"
+      ],
+      "groupName": null,
+      "schedule": ["at any time"]
+    },
+    {
+      "description": "Group GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions"
+    }
+  ]
+}
