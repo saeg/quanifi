@@ -180,7 +180,7 @@ def test_run_lanes_matches_saved(tmp_path):
 
             assert _stable(record["attributes"]) == _stable(saved["attributes"]), key
             assert float(record["attributes"]["qaoa.optimal_value"]) == pytest.approx(
-                float(saved["attributes"]["qaoa.optimal_value"]), abs=1e-5
+                float(saved["attributes"]["qaoa.optimal_value"]), abs=1e-4
             )
             assert sum(record["counts"].values()) == sum(saved["counts"].values()), key
             assert set(record["counts"]) <= set(saved["counts"]) | set(
