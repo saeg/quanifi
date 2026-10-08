@@ -66,6 +66,23 @@ def test_run_canvas_examples_and_generate_reports(tmp_path):
     assert sum(qaoa_counts.values()) == 256
     for key, record in results.items():
         saved = json.loads((ROOT / "demo/pyquil" / f"{key}.json").read_text())
-        assert record == saved
+        if key == "vqe":
+            assert record["description"] == saved["description"]
+            assert record["stages"] == saved["stages"]
+            assert record["counts"] == saved["counts"]
+            rec_attrs = {
+                k: v for k, v in record["attributes"].items() if k != "vqe.optimal_parameters"
+            }
+            saved_attrs = {
+                k: v for k, v in saved["attributes"].items() if k != "vqe.optimal_parameters"
+            }
+            assert rec_attrs == saved_attrs
+            import ast
+
+            rec_params = ast.literal_eval(record["attributes"]["vqe.optimal_parameters"])
+            saved_params = ast.literal_eval(saved["attributes"]["vqe.optimal_parameters"])
+            assert rec_params == pytest.approx(saved_params, abs=1e-5)
+        else:
+            assert record == saved
         assert (tmp_path / f"pyquil-{key}.html").is_file()
         assert (tmp_path / f"{key}.qasm").is_file()

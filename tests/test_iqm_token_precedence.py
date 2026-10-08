@@ -1,5 +1,6 @@
 """A configured token must win over a stale one left in the process environment."""
 import os
+import pytest
 
 from QuantumIQMBatchSubmitter import QuantumIQMBatchSubmitter
 
@@ -9,20 +10,29 @@ class _Backend:
         return "backend"
 
 
+@pytest.fixture(autouse=True)
+def _mock_iqm(monkeypatch):
+    import sys
+    import types
+
+    iqm = types.ModuleType("iqm")
+    qiskit_iqm = types.ModuleType("iqm.qiskit_iqm")
+    qiskit_iqm.IQMProvider = lambda *a, **k: _Backend()
+    iqm.qiskit_iqm = qiskit_iqm
+    monkeypatch.setitem(sys.modules, "iqm", iqm)
+    monkeypatch.setitem(sys.modules, "iqm.qiskit_iqm", qiskit_iqm)
+
+
 def test_a_real_token_overrides_a_blank_one_left_by_an_earlier_run(monkeypatch):
     # Simulates the poisoned state: an earlier invocation with no token set
     # IQM_TOKEN="" in this long-lived process.
     monkeypatch.setenv("IQM_TOKEN", "")
-    monkeypatch.setattr(
-        "iqm.qiskit_iqm.IQMProvider", lambda *a, **k: _Backend(), raising=False)
     QuantumIQMBatchSubmitter().backend_for("https://x", "garnet", "REALTOKEN")
     assert os.environ["IQM_TOKEN"] == "REALTOKEN"
 
 
 def test_no_token_leaves_the_environment_alone(monkeypatch):
     monkeypatch.setenv("IQM_TOKEN", "PREEXISTING")
-    monkeypatch.setattr(
-        "iqm.qiskit_iqm.IQMProvider", lambda *a, **k: _Backend(), raising=False)
     QuantumIQMBatchSubmitter().backend_for("https://x", "garnet", "")
     assert os.environ["IQM_TOKEN"] == "PREEXISTING"
 

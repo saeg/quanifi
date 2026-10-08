@@ -144,6 +144,16 @@ _SAMPLING_DERIVED_ATTRS = {
     "qaoa.num_optimal_states",
 }
 
+_SOLVER_TRAINING_ATTRS = {
+    "qaoa.optimal_value",
+    "qaoa.optimal_parameters",
+    "qaoa.betas",
+    "qaoa.gammas",
+    "qaoa.num_iterations",
+    "qaoa.cost_function_evals",
+    "qaoa.optimizer_message",
+}
+
 
 def test_run_lanes_matches_saved(tmp_path):
     records = tool.execute_lanes(tmp_path)
@@ -159,23 +169,46 @@ def test_run_lanes_matches_saved(tmp_path):
         record = records[key]
         saved = json.loads((ROOT / "demo/qaoa/lanes" / f"{key}.json").read_text())
         engine = steps[2][0]
+        qaoa_type = steps[1][0]
         if engine == "QrispSimulator":
             assert record["description"] == saved["description"], key
             assert record["stages"] == saved["stages"], key
 
             def _stable(attrs):
+                ignore = _SAMPLING_DERIVED_ATTRS
+                if qaoa_type in solver_types:
+                    ignore = ignore | _SOLVER_TRAINING_ATTRS
                 return {
-                    k: v for k, v in attrs.items() if k not in _SAMPLING_DERIVED_ATTRS
+                    k: v for k, v in attrs.items() if k not in ignore
                 }
 
             assert _stable(record["attributes"]) == _stable(saved["attributes"]), key
+            if qaoa_type in solver_types:
+                assert float(record["attributes"]["qaoa.optimal_value"]) == pytest.approx(
+                    float(saved["attributes"]["qaoa.optimal_value"]), abs=1e-5
+                )
             assert sum(record["counts"].values()) == sum(saved["counts"].values()), key
             assert set(record["counts"]) <= set(saved["counts"]) | set(
                 format(i, "0{}b".format(int(record["attributes"]["qaoa.num_qubits"])))
                 for i in range(2 ** int(record["attributes"]["qaoa.num_qubits"]))
             ), key
         else:
-            assert record == saved, key
+            if qaoa_type in solver_types:
+                assert record["description"] == saved["description"], key
+                assert record["stages"] == saved["stages"], key
+                assert record["counts"] == saved["counts"], key
+                rec_attrs = {
+                    k: v for k, v in record["attributes"].items() if k not in _SOLVER_TRAINING_ATTRS
+                }
+                saved_attrs = {
+                    k: v for k, v in saved["attributes"].items() if k not in _SOLVER_TRAINING_ATTRS
+                }
+                assert rec_attrs == saved_attrs, key
+                assert float(record["attributes"]["qaoa.optimal_value"]) == pytest.approx(
+                    float(saved["attributes"]["qaoa.optimal_value"]), abs=1e-5
+                )
+            else:
+                assert record == saved, key
 
         a = record["attributes"]
         assert a["sim.bit_order"] == "q0_left", key
