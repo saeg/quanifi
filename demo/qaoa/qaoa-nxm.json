@@ -657,6 +657,8 @@
           "Reports Directory": "reports/qaoa",
           "Flow Name": "qaoa-nxm",
           "Output Mode": "Local HTML",
+          "Reports API URL": "http://web:8080/api/v1/report-runs/",
+          "Reports API Token": "local-ingestion-token",
           "Reports API Timeout Seconds": "10"
         },
         "propertyDescriptors": {},
