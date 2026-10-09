@@ -237,6 +237,8 @@
           "Reports Directory": "reports/qaoa",
           "Flow Name": "qaoa-qiskit-qaoa",
           "Output Mode": "Local HTML",
+          "Reports API URL": "http://web:8080/api/v1/report-runs/",
+          "Reports API Token": "local-ingestion-token",
           "Reports API Timeout Seconds": "10"
         },
         "propertyDescriptors": {},
@@ -481,6 +483,8 @@
           "Reports Directory": "reports/qaoa",
           "Flow Name": "qaoa-cirq-qaoa",
           "Output Mode": "Local HTML",
+          "Reports API URL": "http://web:8080/api/v1/report-runs/",
+          "Reports API Token": "local-ingestion-token",
           "Reports API Timeout Seconds": "10"
         },
         "propertyDescriptors": {},
@@ -733,6 +737,8 @@
           "Reports Directory": "reports/qaoa",
           "Flow Name": "qaoa-pennylane-qaoa",
           "Output Mode": "Local HTML",
+          "Reports API URL": "http://web:8080/api/v1/report-runs/",
+          "Reports API Token": "local-ingestion-token",
           "Reports API Timeout Seconds": "10"
         },
         "propertyDescriptors": {},
@@ -982,6 +988,8 @@
           "Reports Directory": "reports/qaoa",
           "Flow Name": "qaoa-qrisp-qaoa",
           "Output Mode": "Local HTML",
+          "Reports API URL": "http://web:8080/api/v1/report-runs/",
+          "Reports API Token": "local-ingestion-token",
           "Reports API Timeout Seconds": "10"
         },
         "propertyDescriptors": {},
@@ -1229,6 +1237,8 @@
           "Reports Directory": "reports/qaoa",
           "Flow Name": "qaoa-pyquil-qaoa",
           "Output Mode": "Local HTML",
+          "Reports API URL": "http://web:8080/api/v1/report-runs/",
+          "Reports API Token": "local-ingestion-token",
           "Reports API Timeout Seconds": "10"
         },
         "propertyDescriptors": {},
@@ -1480,6 +1490,8 @@
           "Reports Directory": "reports/qaoa",
           "Flow Name": "qaoa-qiskit-qaoa-circuit",
           "Output Mode": "Local HTML",
+          "Reports API URL": "http://web:8080/api/v1/report-runs/",
+          "Reports API Token": "local-ingestion-token",
           "Reports API Timeout Seconds": "10"
         },
         "propertyDescriptors": {},
@@ -1729,6 +1741,8 @@
           "Reports Directory": "reports/qaoa",
           "Flow Name": "qaoa-cirq-qaoa-circuit",
           "Output Mode": "Local HTML",
+          "Reports API URL": "http://web:8080/api/v1/report-runs/",
+          "Reports API Token": "local-ingestion-token",
           "Reports API Timeout Seconds": "10"
         },
         "propertyDescriptors": {},
@@ -1980,6 +1994,8 @@
           "Reports Directory": "reports/qaoa",
           "Flow Name": "qaoa-pennylane-qaoa-circuit",
           "Output Mode": "Local HTML",
+          "Reports API URL": "http://web:8080/api/v1/report-runs/",
+          "Reports API Token": "local-ingestion-token",
           "Reports API Timeout Seconds": "10"
         },
         "propertyDescriptors": {},
@@ -2228,6 +2244,8 @@
           "Reports Directory": "reports/qaoa",
           "Flow Name": "qaoa-qrisp-qaoa-circuit",
           "Output Mode": "Local HTML",
+          "Reports API URL": "http://web:8080/api/v1/report-runs/",
+          "Reports API Token": "local-ingestion-token",
           "Reports API Timeout Seconds": "10"
         },
         "propertyDescriptors": {},
@@ -2472,6 +2490,8 @@
           "Reports Directory": "reports/qaoa",
           "Flow Name": "qaoa-pyquil-qaoa-circuit",
           "Output Mode": "Local HTML",
+          "Reports API URL": "http://web:8080/api/v1/report-runs/",
+          "Reports API Token": "local-ingestion-token",
           "Reports API Timeout Seconds": "10"
         },
         "propertyDescriptors": {},

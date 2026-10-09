@@ -191,6 +191,8 @@
           "Reports Directory": "reports/pyquil",
           "Flow Name": "pyquil-grover",
           "Output Mode": "Local HTML",
+          "Reports API URL": "http://web:8080/api/v1/report-runs/",
+          "Reports API Token": "local-ingestion-token",
           "Reports API Timeout Seconds": "10"
         },
         "propertyDescriptors": {},
@@ -401,6 +403,8 @@
           "Reports Directory": "reports/pyquil",
           "Flow Name": "pyquil-vqe",
           "Output Mode": "Local HTML",
+          "Reports API URL": "http://web:8080/api/v1/report-runs/",
+          "Reports API Token": "local-ingestion-token",
           "Reports API Timeout Seconds": "10"
         },
         "propertyDescriptors": {},
@@ -648,6 +652,8 @@
           "Reports Directory": "reports/pyquil",
           "Flow Name": "pyquil-qaoa",
           "Output Mode": "Local HTML",
+          "Reports API URL": "http://web:8080/api/v1/report-runs/",
+          "Reports API Token": "local-ingestion-token",
           "Reports API Timeout Seconds": "10"
         },
         "propertyDescriptors": {},
