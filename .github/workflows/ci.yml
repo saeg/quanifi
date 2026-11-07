@@ -57,7 +57,7 @@ jobs:
         run: uv sync --extra dev
 
       - name: Run Light Smoke Test Suite (Key Processors)
-        run: uv run pytest tests/test_smoke_light.py -m smoke_light --tb=short
+        run: uv run pytest tests/smoke/test_smoke_light.py -m smoke_light --tb=short
 
       - name: Run Pytest
         run: uv run pytest -m "not slow" --tb=short

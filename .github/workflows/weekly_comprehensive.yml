@@ -17,10 +17,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  comprehensive-smoke:
-    name: Comprehensive Processor Smoke Suite (All 122 Processors)
+  smoke-subsystems:
+    name: ${{ matrix.subsystem.name }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        subsystem:
+          - name: "Smoke / Qiskit (22 processors)"
+            file: "tests/smoke/test_smoke_qiskit.py"
+          - name: "Smoke / Qrisp (29 processors)"
+            file: "tests/smoke/test_smoke_qrisp.py"
+          - name: "Smoke / Cirq (16 processors)"
+            file: "tests/smoke/test_smoke_cirq.py"
+          - name: "Smoke / PennyLane (12 processors)"
+            file: "tests/smoke/test_smoke_pennylane.py"
+          - name: "Smoke / PyQuil (10 processors)"
+            file: "tests/smoke/test_smoke_pyquil.py"
+          - name: "Smoke / Common Processors (21 processors)"
+            file: "tests/smoke/test_smoke_common.py"
+          - name: "Smoke / Hardware & Simulators (12 processors)"
+            file: "tests/smoke/test_smoke_hardware.py"
+          - name: "Smoke / Completeness Check (122 partition check)"
+            file: "tests/smoke/test_smoke_completeness.py"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,8 +56,28 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev
 
-      - name: Run Comprehensive Smoke Suite (All Processors)
-        run: uv run pytest tests/test_smoke_comprehensive.py -m smoke_comprehensive --tb=short -v
+      - name: Run ${{ matrix.subsystem.name }} smoke tests
+        run: uv run pytest ${{ matrix.subsystem.file }} -m smoke_comprehensive --tb=short -v
+
+  full-regression:
+    name: Full Regression Suite (not slow)
+    needs: smoke-subsystems
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --extra dev
 
       - name: Run Full Pytest Regression Suite
         run: uv run pytest -m "not slow" --tb=short
