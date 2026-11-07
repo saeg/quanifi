@@ -1006,15 +1006,24 @@ class TestHardwareBatchLane:
                     results = [type("Exp", (), {"shots": 100})()]
                 return Res()
 
+        import qiskit_quantuminspire.qi_jobs
+        import qiskit_quantuminspire.qi_provider
+
         orig_deserialize = getattr(qiskit_quantuminspire.qi_jobs.QIJob, "deserialize", None)
+        orig_provider = getattr(qiskit_quantuminspire.qi_provider, "QIProvider", None)
         try:
             qiskit_quantuminspire.qi_jobs.QIJob.deserialize = staticmethod(lambda *args, **kwargs: FakeQIJob())
+            class FakeQIProvider:
+                pass
+            qiskit_quantuminspire.qi_provider.QIProvider = FakeQIProvider
             manifest = {"job_id": "qi-1", "entries": [{"label": "e1", "kind": "control"}], "provider_handle_path": "/tmp/dummy"}
             res_p = QuantumInspireBatchPoller().transform(MockContext(), MockFlowFile(content=json.dumps(manifest)))
-            assert res_p.relationship == "success"
+            assert res_p.relationship == "success", res_p.attributes
         finally:
             if orig_deserialize:
                 qiskit_quantuminspire.qi_jobs.QIJob.deserialize = orig_deserialize
+            if orig_provider:
+                qiskit_quantuminspire.qi_provider.QIProvider = orig_provider
 
 
 # ===========================================================================
