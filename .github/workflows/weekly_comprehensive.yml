@@ -1,0 +1,43 @@
+name: Weekly Comprehensive Test Suite
+
+on:
+  schedule:
+    # Run every Sunday at 02:00 UTC
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+    inputs:
+      verbose:
+        description: 'Run tests with verbose output'
+        required: false
+        default: 'true'
+        type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  comprehensive-smoke:
+    name: Comprehensive Processor Smoke Suite (All 122 Processors)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run Comprehensive Smoke Suite (All Processors)
+        run: uv run pytest tests/test_smoke_comprehensive.py -m smoke_comprehensive --tb=short -v
+
+      - name: Run Full Pytest Regression Suite
+        run: uv run pytest -m "not slow" --tb=short

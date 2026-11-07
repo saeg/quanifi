@@ -59,6 +59,8 @@ packages = ["src"]
 testpaths = ["tests"]
 markers = [
     "slow: tests that run real Qrisp optimisation or long PyQVM sampling (deselect with '-m not slow')",
+    "smoke_light: light smoke test suite of key components to run on every push in CI/CD",
+    "smoke_comprehensive: comprehensive smoke test suite exercising every processor component once per week",
 ]
 
 [tool.ruff]
