@@ -37,8 +37,8 @@ def _strip_global_phase(qasm):
     so it changes no measurement probability and dropping it is sound *for a
     circuit that is sampled directly*. It would not be sound if the circuit were
     later placed under a control, because a control turns a global phase into a
-    relative one — that is exactly the mechanism behind the Braket phase defect
-    this project has already hit once.
+    relative one. This general phase caveat is distinct from the numerical
+    controlled-gate defect reproduced in Braket's local simulator.
 
     Returns the cleaned source and the number of statements removed.
     """
