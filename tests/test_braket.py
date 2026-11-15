@@ -2,7 +2,7 @@
 Tests for BraketSimulator — the Amazon Braket local-simulator counts engine.
 
 Covers: the simulator contract (sim.* attributes, counts JSON), the native
-qasm3 path (stdgates.inc inlining), the qasm2 translation path (flagged via
+qasm3 path (Braket-native gate rebasing), the qasm2 translation path (flagged via
 sim.translation), Braket's MSB-first bit order, and cross-framework interop
 (Qiskit- and Cirq-built circuits running on Braket).
 """
@@ -102,8 +102,8 @@ class TestBraketSimulatorQasm2:
         assert set(counts.keys()) <= {"00", "01", "10", "11"}
 
     def test_grover_phase_kickback_peak(self):
-        # Regression: the old stdgates-inlining translation gave Braket wrong
-        # relative phases in multi-controlled decompositions — the 4-qubit
+        # Regression: the old stdgates-inlining route triggered a Braket
+        # controlled-gate numerical update defect in this four-qubit case. The
         # Grover peak split ~50/50 between "0110" and "0111". With the
         # Braket-native basis the marked state must dominate outright.
         from QiskitGroverCircuit import QiskitGroverCircuit

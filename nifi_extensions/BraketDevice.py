@@ -38,8 +38,8 @@ class BraketDevice(FlowFileTransform):
     This is the hardware gateway for *every* framework: it consumes the shared
     circuit contract (circuit.format = qasm3 or qasm2), so a circuit built by
     any Qiskit, Cirq, Qrisp or PennyLane builder runs on real hardware through
-    this one processor. The qasm handling mirrors BraketSimulator (stdgates
-    inlining, full-register measurement, qasm2 translation via Qiskit).
+    this one processor. The qasm handling mirrors BraketSimulator (native-gate
+    rebasing, full-register measurement, qasm2/qasm3 parsing via Qiskit).
 
     Long QPU queues do not block the canvas: with Wait For Results = false the
     task is submitted asynchronously and the FlowFile continues with

@@ -14,21 +14,23 @@
 """qasm2/qasm3 -> Braket-native OpenQASM 3 translation, shared by
 BraketSimulator and BraketDevice.
 
-Braket ships no stdgates.inc, and inlining Qiskit's copy (the previous
-approach) is unsound: those gate definitions bottom out in the spec's
-U / gphase / ctrl-modifier primitives, whose phase conventions Braket's
-interpreter implements differently. Uncontrolled gates only differ by a
-global phase, so simple circuits still sample correctly — but any
-multi-controlled-gate decomposition (Grover oracles, QPE, QAOA mixers)
-relies on phase kickback across cx/rz sequences, where the convention
-mismatch becomes a *relative* phase error that the next Hadamard converts
-into visibly wrong counts (found via the differential study: the 4-qubit
-Grover peak split 50/50 between the marked state and its neighbour).
+The old adapter inlined Qiskit's stdgates.inc into OpenQASM 3. Differential
+execution exposed a four-qubit Grover peak split between the marked state
+and its neighbour. A later isolation reproduced the error with only
+``ctrl @ x q[1], q[3]`` on four qubits: no QASM2 translation or gphase is
+needed. Braket's small controlled-gate numerical update can reshape a
+non-contiguous output slice into a detached copy and lose the write.
 
-The sound path: parse with Qiskit, transpile to the {h, cx, rz, x} basis,
-and emit only gates Braket implements natively (cx under its Braket name
-cnot). No gate definitions are shipped at all, so Braket's own gate
-semantics apply end to end.
+The original phase-convention explanation is superseded for this case.
+The defect reproduces in amazon-braket-default-simulator 1.39.4 and 1.43.1;
+upstream PR #415 proposes the corresponding repair (open on 2026-11-13):
+https://github.com/amazon-braket/amazon-braket-default-simulator-python/pull/415
+This evidence concerns the local simulator, not managed simulators or QPUs.
+
+The workaround parses with Qiskit, transpiles to {h, cx, rz, x}, and emits
+Braket-native names (cx as cnot). Native cnot avoids the faulty generic
+controlled-gate path in the reproduced cases. Replication and isolation:
+https://github.com/ramalhoneilson/quanifi-braket-phase-replication
 """
 import re
 
